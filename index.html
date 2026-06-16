@@ -1,0 +1,2433 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>“诊”相大白 · 社区门诊健康谣言识别挑战</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&display=swap');
+
+:root {
+  --green: #1a7a4a;
+  --green-light: #e8f5ee;
+  --green-mid: #2d9e66;
+  --red: #c0392b;
+  --red-light: #fdf0ee;
+  --amber: #d4851a;
+  --amber-light: #fef8ee;
+  --blue: #1a5fa8;
+  --blue-light: #eaf2fc;
+  --bg: #f7f5f0;
+  --card: #ffffff;
+  --border: #e0dbd0;
+  --text: #1a1a1a;
+  --text2: #5a5a5a;
+  --text3: #9a9a9a;
+  --serif: 'Noto Serif SC', serif;
+  --sans: 'Noto Sans SC', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; min-height: 100%; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+#splash {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(45,158,102,0.35), transparent 28%),
+    radial-gradient(circle at 80% 90%, rgba(26,95,168,0.25), transparent 30%),
+    #0d2b1a;
+  color: white;
+  text-align: center;
+  padding: 2rem;
+}
+.splash-cross { font-size: 64px; margin-bottom: 1.5rem; animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }
+.splash-title { font-family: var(--serif); font-size: 34px; font-weight: 600; letter-spacing: 4px; margin-bottom: 0.5rem; }
+.splash-sub { font-size: 14px; color: #9fd7b1; letter-spacing: 2px; margin-bottom: 2.2rem; }
+.splash-desc { font-size: 14px; color: #d8e6dc; line-height: 1.9; max-width: 340px; margin-bottom: 2.5rem; }
+.splash-btn {
+  background: var(--green-mid);
+  color: white;
+  border: none;
+  padding: 0.9rem 2.6rem;
+  font-size: 16px;
+  font-family: var(--sans);
+  font-weight: 700;
+  border-radius: 40px;
+  cursor: pointer;
+  letter-spacing: 2px;
+  transition: all 0.2s;
+  box-shadow: 0 10px 24px rgba(45,158,102,0.28);
+}
+.splash-btn:hover { background: #34b878; transform: translateY(-2px); }
+
+#game { display: none; max-width: 560px; margin: 0 auto; padding: 1rem; }
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0d2b1a;
+  color: white;
+  padding: 0.75rem 1.25rem;
+  border-radius: 14px;
+  margin-bottom: 0.85rem;
+  box-shadow: 0 4px 12px rgba(13,43,26,0.12);
+}
+.top-title { font-family: var(--serif); font-size: 16px; letter-spacing: 1px; }
+.top-sub { font-size: 11px; color: #9fd7b1; margin-top: 2px; }
+.top-stats { display: flex; gap: 16px; }
+.stat-item { text-align: center; }
+.stat-v { font-size: 20px; font-weight: 700; color: #9fd7b1; }
+.stat-l { font-size: 10px; color: #d4ded6; }
+
+.level-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 0.85rem;
+  padding: 0.6rem 1rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.level-tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--green-light);
+  color: var(--green);
+  white-space: nowrap;
+  letter-spacing: 1px;
+}
+.prog-area { flex: 1; }
+.prog-lbl { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+.prog-track { height: 5px; background: #e8e4dc; border-radius: 3px; overflow: hidden; }
+.prog-fill { height: 100%; width: 0%; background: var(--green-mid); border-radius: 3px; transition: width 0.5s ease; }
+
+.scene-strip {
+  background: #0d2b1a;
+  color: #c5e8d2;
+  font-size: 12px;
+  line-height: 1.7;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 0.85rem;
+  font-style: italic;
+}
+.scene-strip::before { content: '📋 '; }
+
+.patient-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.25rem;
+  margin-bottom: 0.85rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.p-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 0.85rem;
+  margin-bottom: 0.85rem;
+  border-bottom: 1px dashed var(--border);
+}
+.p-emo { font-size: 40px; line-height: 1; }
+.p-info { flex: 1; }
+.p-name { font-size: 15px; font-weight: 700; color: var(--text); }
+.p-chief { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.p-badge {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+  display: inline-block;
+  margin-top: 4px;
+}
+.badge-wait { background: var(--amber-light); color: var(--amber); }
+.badge-ok { background: var(--green-light); color: var(--green); }
+.badge-bad { background: var(--red-light); color: var(--red); }
+
+.says-lbl { font-size: 11px; color: var(--text3); margin-bottom: 6px; letter-spacing: 1px; }
+.bubble {
+  background: #f0ede6;
+  border-radius: 4px 14px 14px 14px;
+  padding: 0.9rem 1rem;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--text);
+  margin-bottom: 1rem;
+  border-left: 3px solid #c8c0b0;
+}
+
+.q-label { font-size: 13px; font-weight: 500; color: var(--text2); margin-bottom: 0.6rem; }
+.choices { display: flex; gap: 10px; margin-bottom: 0.85rem; }
+.cbtn {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+}
+.cbtn:hover:not(:disabled) { background: var(--bg); border-color: #bbb; }
+.cbtn.correct { background: var(--green-light); border-color: var(--green-mid); color: var(--green); }
+.cbtn.wrong { background: var(--red-light); border-color: var(--red); color: var(--red); }
+.cbtn:disabled { cursor: default; }
+
+.result-banner {
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 0.85rem;
+  display: none;
+}
+.result-banner.show { display: block; }
+.rb-ok { background: var(--green-light); color: var(--green); }
+.rb-bad { background: var(--red-light); color: var(--red); }
+
+.prescription {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 0.85rem;
+  display: none;
+  position: relative;
+  background: #fdfcf8;
+}
+.prescription.show { display: block; }
+.rx-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 0.6rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px dashed var(--border);
+}
+.rx-cross { font-size: 18px; }
+.rx-t { font-size: 13px; font-weight: 700; color: var(--blue); letter-spacing: 1px; }
+.rx-h { font-size: 11px; color: var(--text3); }
+.rx-body { font-size: 13px; line-height: 1.8; color: var(--text); white-space: pre-line; }
+.rx-src { font-size: 11px; color: var(--text3); margin-top: 6px; }
+.rx-stamp {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  font-size: 10px;
+  color: var(--green);
+  border: 1.5px solid var(--green);
+  border-radius: 4px;
+  padding: 2px 6px;
+  transform: rotate(-8deg);
+  opacity: 0.5;
+  letter-spacing: 1px;
+}
+
+.next-btn {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--sans);
+  cursor: pointer;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  display: none;
+  transition: all 0.15s;
+  letter-spacing: 0.5px;
+}
+.next-btn.show { display: block; }
+.next-btn:hover { background: #0d2b1a; color: white; border-color: #0d2b1a; }
+
+#result { display: none; max-width: 560px; margin: 0 auto; padding: 1rem; min-height: 100vh; }
+.result-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  margin-top: 2rem;
+}
+.result-emoji { font-size: 56px; margin-bottom: 1rem; }
+.result-title { font-family: var(--serif); font-size: 22px; font-weight: 600; margin-bottom: 0.5rem; }
+.result-sub { font-size: 14px; color: var(--text2); line-height: 1.7; margin-bottom: 1.5rem; }
+.result-stats { display: flex; gap: 12px; margin-bottom: 1.5rem; }
+.rs-card { flex: 1; background: var(--bg); border-radius: 10px; padding: 1rem; }
+.rs-v { font-size: 28px; font-weight: 700; color: var(--green); }
+.rs-l { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.result-next-btn {
+  width: 100%;
+  padding: 0.85rem;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: var(--sans);
+  cursor: pointer;
+  border: none;
+  background: #0d2b1a;
+  color: white;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+.result-next-btn:hover { background: var(--green-mid); }
+.final-msg {
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--green-light);
+  border-radius: 10px;
+}
+
+.boss-article {
+  background: #fdfcf8;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  font-size: 13px;
+  line-height: 1.9;
+}
+.boss-article-title {
+  font-family: var(--serif);
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px dashed var(--border);
+  color: var(--text);
+}
+.boss-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-radius: 6px;
+  padding: 8px 6px;
+  border-bottom: 1px solid #f0ede6;
+}
+.boss-item:last-child { border-bottom: none; }
+.boss-item:hover { background: #f5f2eb; }
+.boss-num {
+  font-size: 12px;
+  font-weight: 700;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #e8e4dc;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  transition: all 0.2s;
+}
+.boss-item-text { font-size: 13px; line-height: 1.7; color: var(--text); flex: 1; }
+.boss-item.selected-rumor .boss-num { background: var(--red-light); color: var(--red); }
+.boss-item.selected-rumor .boss-item-text { color: var(--red); }
+.boss-item.confirmed-safe .boss-num { background: var(--green-light); color: var(--green); }
+.boss-item.confirmed-rumor .boss-num { background: var(--red-light); color: var(--red); }
+.boss-hint { font-size: 12px; color: var(--text3); margin-bottom: 0.6rem; }
+.boss-submit-btn {
+  width: 100%;
+  padding: 0.7rem;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--sans);
+  cursor: pointer;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  margin-bottom: 0.85rem;
+  transition: all 0.15s;
+}
+.boss-submit-btn:hover:not(:disabled) { background: #0d2b1a; color: white; border-color: #0d2b1a; }
+.boss-submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+@media (max-width: 420px) {
+  #game, #result { padding: 0.75rem; }
+  .splash-title { font-size: 30px; }
+  .choices { gap: 8px; }
+}
+
+/* 2026 visual redesign */
+:root {
+  --brand: #0d5dde;
+  --brand-deep: #07388f;
+  --cyan: #12bfc0;
+  --mint: #37d6ad;
+  --danger: #ff6846;
+  --ink: #173761;
+  --muted: #687d9b;
+  --glass: rgba(255,255,255,.88);
+  --line: rgba(77,157,255,.32);
+  --shadow: 0 18px 46px rgba(42,106,178,.18);
+  --h5-max-width: 750px;
+  --h5-min-height: min(1334px, 177.8667vw);
+}
+
+html, body {
+  width: 100%;
+  min-height: 100%;
+  background: #dff2ff;
+  color: var(--ink);
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255,255,255,.9), transparent 36%),
+    linear-gradient(180deg, #e8f7ff, #dff5f3);
+}
+
+button { -webkit-tap-highlight-color: transparent; }
+
+#splash {
+  position: relative;
+  width: min(100vw, var(--h5-max-width));
+  aspect-ratio: 750 / 1334;
+  min-height: 0;
+  margin: 0 auto;
+  display: block;
+  overflow: hidden;
+  padding: 0;
+  background: url("./zhenshangdabai-assets/backgrounds/cover_new.webp") top center/100% 100% no-repeat;
+  color: var(--ink);
+  text-align: left;
+  animation: cover-fade-in .7s ease-out both;
+}
+@keyframes cover-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.cover-hotspot {
+  position: absolute;
+  z-index: 5;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.cover-hotspot:focus-visible {
+  outline: 3px solid #0c6df2;
+  outline-offset: 3px;
+}
+.cover-hotspot.start { top: 74.2%; left: 21.2%; width: 58.2%; height: 8.9%; }
+@media (prefers-reduced-motion: reduce) {
+  #splash { animation: none; }
+}
+
+.splash-btn, .result-next-btn, .next-btn, .boss-submit-btn {
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(100deg, #1268ee, #08a9d5 52%, #20cfaa);
+  color: white;
+  box-shadow:
+    0 14px 34px rgba(12,117,215,.28),
+    inset 0 2px 0 rgba(255,255,255,.55);
+}
+.cover-hotspot.start {
+  background: transparent;
+  box-shadow: none;
+  color: transparent !important;
+  font-size: 0;
+  text-shadow: none;
+}
+
+#role-select {
+  position: relative;
+  display: none;
+  width: min(100vw, var(--h5-max-width));
+  aspect-ratio: 750 / 1334;
+  min-height: 0;
+  margin: 0 auto;
+  overflow: hidden;
+  background: url("./zhenshangdabai-assets/backgrounds/role_select.webp") top center/100% 100% no-repeat;
+  animation: cover-fade-in .55s ease-out both;
+}
+
+#intro-page {
+  position: relative;
+  display: none;
+  width: min(100vw, var(--h5-max-width));
+  aspect-ratio: 750 / 1334;
+  min-height: 0;
+  margin: 0 auto;
+  overflow: hidden;
+  background-position: top center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  animation: cover-fade-in .55s ease-out both;
+}
+#intro-page.male {
+  background-image: url("./zhenshangdabai-assets/backgrounds/intro_male.webp");
+}
+#intro-page.female {
+  background-image: url("./zhenshangdabai-assets/backgrounds/intro_female.webp");
+}
+.intro-hotspot {
+  position: absolute;
+  z-index: 5;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: transparent;
+  font-size: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.intro-hotspot:focus-visible {
+  outline: 3px solid #0c6df2;
+  outline-offset: 3px;
+}
+#intro-page.male .intro-rules { top: 3.6%; left: 57.1%; width: 18.4%; height: 4.8%; }
+#intro-page.male .intro-history { top: 3.6%; left: 77.1%; width: 18.5%; height: 4.8%; }
+#intro-page.male .intro-start { top: 77%; left: 12.3%; width: 74.9%; height: 10.7%; }
+#intro-page.female .intro-rules { top: 3.9%; left: 55.3%; width: 19.5%; height: 4.7%; }
+#intro-page.female .intro-history { top: 3.9%; left: 77%; width: 19%; height: 4.7%; }
+#intro-page.female .intro-start { top: 78.7%; left: 10.7%; width: 68.5%; height: 10.2%; }
+
+#map-page {
+  position: relative;
+  display: none;
+  width: min(100vw, var(--h5-max-width));
+  min-height: var(--h5-min-height);
+  margin: 0 auto;
+  padding: 20px 18px 34px;
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(239,252,255,.52),rgba(232,252,248,.64)),
+    url("./zhenshangdabai-assets/map/map_bg.webp") top center/cover no-repeat;
+  animation: cover-fade-in .55s ease-out both;
+}
+.map-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.map-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--brand-deep);
+  font-weight: 900;
+}
+.map-back {
+  display: grid;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid rgba(13,93,222,.22);
+  border-radius: 50%;
+  background: rgba(255,255,255,.86);
+  color: var(--brand-deep);
+  font: 900 24px/1 var(--sans);
+  box-shadow: 0 6px 16px rgba(29,92,151,.12);
+}
+.map-back:active { transform: scale(.94); }
+.map-brand-mark {
+  display: grid;
+  width: 42px;
+  aspect-ratio: 1;
+  place-items: center;
+  border-radius: 14px;
+  background: linear-gradient(145deg,var(--brand),var(--cyan));
+  color: white;
+  box-shadow: 0 8px 18px rgba(13,93,222,.22);
+}
+.map-actions { display: flex; gap: 6px; }
+.map-action {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid rgba(13,93,222,.25);
+  border-radius: 999px;
+  background: rgba(255,255,255,.78);
+  color: var(--brand-deep);
+  font: 700 11px var(--sans);
+}
+.map-profile {
+  display: grid;
+  grid-template-columns: 76px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 13px;
+  border: 1px solid rgba(77,157,255,.28);
+  border-radius: 22px;
+  background: rgba(255,255,255,.86);
+  box-shadow: 0 12px 30px rgba(42,106,178,.13);
+}
+.map-avatar {
+  width: 76px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #e5f5ff;
+}
+.map-doctor-name { color: var(--brand-deep); font-size: 19px; font-weight: 900; }
+.map-doctor-level { margin-top: 4px; color: var(--muted); font-size: 12px; }
+.map-score { color: var(--brand); text-align: right; font-size: 23px; font-weight: 900; }
+.map-score small { display: block; color: var(--muted); font-size: 10px; font-weight: 600; }
+.map-title {
+  margin: 22px 0 5px;
+  color: var(--brand-deep);
+  font-size: 29px;
+  font-weight: 900;
+  text-align: center;
+}
+.map-subtitle { color: var(--muted); font-size: 13px; text-align: center; }
+.level-map {
+  position: relative;
+  display: grid;
+  gap: 13px;
+  margin-top: 18px;
+  padding: 6px 0;
+}
+.level-map::before {
+  content: "";
+  position: absolute;
+  top: 38px;
+  bottom: 38px;
+  left: 50%;
+  width: 4px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: linear-gradient(#2b86ef,#20cdb2,#bdc9d8);
+  opacity: .65;
+}
+.map-level {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 72px 1fr 34px;
+  align-items: center;
+  gap: 11px;
+  width: 88%;
+  min-height: 104px;
+  padding: 11px 13px;
+  border: 1px solid rgba(75,151,233,.26);
+  border-radius: 21px;
+  background: rgba(255,255,255,.9);
+  box-shadow: 0 12px 28px rgba(31,99,165,.13);
+  text-align: left;
+}
+.map-level:nth-child(even) { margin-left: auto; }
+.map-level:nth-child(odd) { margin-right: auto; }
+.map-level.locked { filter: grayscale(.65); opacity: .72; }
+.map-level.current {
+  border-color: #18bdb3;
+  box-shadow: 0 0 0 3px rgba(24,189,179,.13),0 14px 32px rgba(31,99,165,.17);
+}
+.map-level.boss { border-color: rgba(255,101,88,.38); }
+.map-level-icon { width: 70px; height: 70px; object-fit: contain; }
+.map-level strong { display: block; color: var(--brand-deep); font-size: 17px; }
+.map-level span { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
+.map-level-status { color: #0e9f8c; font-weight: 800; }
+.map-level.locked .map-level-status { color: #8797ad; }
+.map-level-arrow {
+  display: grid;
+  width: 32px;
+  aspect-ratio: 1;
+  place-items: center;
+  border-radius: 50%;
+  background: #edf6ff;
+  color: var(--brand);
+  font-weight: 900;
+}
+.role-back,
+.role-card,
+.role-confirm {
+  position: absolute;
+  z-index: 5;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.role-back {
+  top: 2.1%;
+  right: 3.4%;
+  width: 10%;
+  height: 6.2%;
+  border-radius: 50%;
+}
+.role-card {
+  top: 22.5%;
+  width: 41.4%;
+  height: 38.8%;
+  border: 0;
+  border-radius: 7%;
+  transition: box-shadow .2s, background .2s;
+}
+.role-card.male { left: 6%; }
+.role-card.female { right: 6%; }
+.role-card:not(.active) {
+  background: rgba(247,252,255,.22);
+  box-shadow: inset 0 0 0 999px rgba(248,252,255,.16);
+}
+.role-card.active {
+  background: rgba(22,195,180,.035);
+  box-shadow: inset 0 0 28px rgba(22,195,180,.08);
+}
+.role-card::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  width: 22%;
+  height: 13%;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(246,252,255,.98);
+}
+.role-card::after {
+  content: "";
+  position: absolute;
+  bottom: 2.5%;
+  width: 11.5%;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  border: 2px solid #23b9b4;
+  border-radius: 50%;
+  background: rgba(250,254,255,.96);
+}
+.role-card.active::after {
+  content: "✓";
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg,#1678ee,#18cbb4);
+  color: white;
+  font: 900 clamp(12px,4vw,28px)/1 var(--sans);
+  box-shadow: 0 5px 14px rgba(18,113,220,.3);
+}
+.role-card.male::before,
+.role-card.male::after { left: 50%; }
+.role-card.female::before,
+.role-card.female::after { left: 46.5%; }
+.doctor-code {
+  position: absolute;
+  z-index: 6;
+  top: 71.15%;
+  left: 12.2%;
+  width: 74.2%;
+  height: 4.35%;
+  padding: 0 7.5% 0 2.6%;
+  border: 0;
+  border-radius: 999px;
+  outline: 0;
+  background: #f9fcff;
+  color: #123f7d;
+  font: 700 clamp(13px,3.4vw,25px) var(--sans);
+}
+.doctor-code::placeholder { color: #9aacc7; font-weight: 500; }
+.doctor-code:focus {
+  box-shadow: inset 0 0 0 2px rgba(29,142,232,.45);
+}
+.role-confirm {
+  top: 83.9%;
+  left: 13.2%;
+  width: 72.2%;
+  height: 7.6%;
+  border-radius: 999px;
+}
+.role-card:focus-visible,
+.role-back:focus-visible,
+.role-confirm:focus-visible {
+  outline: 3px solid #0c6df2;
+  outline-offset: 3px;
+}
+.role-card.role-error { animation: role-shake .32s ease-in-out; }
+@keyframes role-shake {
+  0%,100% { transform: translateX(0); }
+  30% { transform: translateX(-5px); }
+  70% { transform: translateX(5px); }
+}
+
+#game {
+  position: relative;
+  width: min(100vw, var(--h5-max-width));
+  max-width: none;
+  min-height: var(--h5-min-height);
+  margin: 0 auto;
+  padding: max(16px, env(safe-area-inset-top)) 18px max(28px, env(safe-area-inset-bottom));
+  background:
+    linear-gradient(180deg, rgba(240,251,255,.68), rgba(233,250,248,.8)),
+    url("./zhenshangdabai-assets/backgrounds/bg_clinic.webp") center top/cover no-repeat;
+}
+
+.top-bar {
+  background: transparent;
+  color: var(--brand-deep);
+  padding: 6px 2px 12px;
+  margin-bottom: 8px;
+  box-shadow: none;
+}
+.top-identity {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  min-width: 0;
+  gap: 10px;
+}
+.top-identity > div { min-width: 0; }
+.back-btn {
+  display: grid;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid rgba(13,93,222,.2);
+  border-radius: 50%;
+  background: rgba(255,255,255,.82);
+  color: var(--brand-deep);
+  font: 900 24px/1 var(--sans);
+  box-shadow: 0 6px 18px rgba(29,92,151,.1);
+}
+.back-btn:active { transform: scale(.94); }
+
+.top-title { font-family: var(--sans); font-size: 20px; font-weight: 900; }
+.top-sub { color: var(--muted); font-size: 12px; }
+.top-stats { gap: 8px; }
+.stat-item {
+  min-width: 58px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255,255,255,.72);
+  backdrop-filter: blur(10px);
+}
+.stat-v { color: var(--brand); font-size: 19px; }
+.stat-l { color: var(--muted); }
+
+.level-strip {
+  gap: 12px;
+  padding: 12px 14px;
+  border-color: var(--line);
+  border-radius: 20px;
+  background: var(--glass);
+  box-shadow: 0 10px 28px rgba(51,117,180,.1);
+}
+.level-tag {
+  padding: 6px 12px;
+  background: linear-gradient(135deg, rgba(18,104,238,.12), rgba(32,207,170,.14));
+  color: var(--brand);
+}
+.prog-lbl { color: #546d8d; }
+.prog-track { height: 8px; background: #dce9f6; }
+.prog-fill { background: linear-gradient(90deg, var(--brand), var(--cyan), var(--mint)); }
+
+.scene-strip {
+  padding: 9px 14px;
+  border: 1px solid rgba(18,191,192,.18);
+  border-radius: 14px;
+  background: rgba(255,255,255,.64);
+  color: #50728f;
+  font-style: normal;
+}
+.scene-strip::before { content: "⌖ "; color: var(--cyan); }
+
+.patient-card {
+  padding: 18px;
+  border: 1px solid rgba(69,151,240,.38);
+  border-radius: 28px;
+  background: rgba(255,255,255,.9);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+.game-footer-scene {
+  position: relative;
+  min-height: 300px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 26px;
+  transition: opacity .25s, max-height .25s, min-height .25s, margin .25s;
+}
+.game-footer-scene::before {
+  content: "";
+  position: absolute;
+  inset: 34px 0 0;
+  border: 1px solid rgba(73,157,238,.18);
+  border-radius: 26px;
+  background: linear-gradient(135deg, rgba(255,255,255,.56), rgba(226,251,247,.54));
+  backdrop-filter: blur(10px);
+}
+.game-footer-doctor {
+  position: absolute;
+  z-index: 1;
+  right: -3%;
+  bottom: -10%;
+  width: min(49%, 270px);
+  max-height: 300px;
+  object-fit: contain;
+  object-position: right bottom;
+  filter: drop-shadow(0 14px 24px rgba(20,91,151,.14));
+}
+.game-footer-doctor.male {
+  right: 2%;
+  bottom: -105px;
+  width: auto;
+  height: 405px;
+  max-height: none;
+}
+.game-footer-copy {
+  position: absolute;
+  z-index: 2;
+  top: 85px;
+  left: 7%;
+  width: 52%;
+  color: var(--brand-deep);
+}
+.game-footer-copy strong {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+.game-footer-copy span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.75;
+}
+.game-footer-copy .tip-emphasis {
+  color: var(--brand-deep);
+  font-weight: 900;
+}
+.game-footer-scene.hidden {
+  min-height: 0;
+  max-height: 0;
+  margin: 0;
+  opacity: 0;
+}
+.scroll-hint {
+  position: fixed;
+  z-index: 30;
+  left: 50%;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  display: none;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border: 1px solid rgba(31,132,230,.22);
+  border-radius: 999px;
+  background: rgba(255,255,255,.94);
+  color: var(--brand-deep);
+  font: 800 13px/1.2 var(--sans);
+  box-shadow: 0 10px 28px rgba(22,89,155,.18);
+  transform: translateX(-50%);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+}
+.scroll-hint::after {
+  content: "⌄";
+  display: grid;
+  width: 16px;
+  height: 16px;
+  margin-top: -4px;
+  place-items: center;
+  color: var(--cyan);
+  font-size: 18px;
+  line-height: 1;
+  animation: scroll-hint-bounce 1.2s ease-in-out infinite;
+}
+.scroll-hint.show { display: flex; }
+@keyframes scroll-hint-bounce {
+  0%,100% { transform: translateY(-1px); }
+  50% { transform: translateY(1px); }
+}
+
+.p-head { gap: 14px; padding-bottom: 14px; }
+.p-emo {
+  width: 82px;
+  height: 82px;
+  flex: 0 0 82px;
+  overflow: hidden;
+  border: 3px solid #b7ddff;
+  border-radius: 50%;
+  background: #eef8ff;
+  font-size: 0;
+}
+.p-emo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+.p-name { color: var(--brand-deep); font-size: 18px; }
+.p-chief { color: var(--muted); }
+.p-badge { margin-top: 6px; }
+
+.bubble {
+  position: relative;
+  padding: 18px 18px 18px 22px;
+  border: 1px solid #d4e8fb;
+  border-left: 4px solid var(--brand);
+  border-radius: 20px;
+  background: linear-gradient(145deg, #f8fcff, #eff8ff);
+  color: #153663;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.q-label {
+  margin: 17px 0 12px;
+  color: var(--brand-deep);
+  font-size: 17px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.choices { flex-direction: column; gap: 12px; }
+.cbtn {
+  min-height: 64px;
+  border: 2px solid rgba(26,108,229,.24);
+  border-radius: 999px;
+  background: linear-gradient(100deg, #1d76ef, #16bdd0);
+  color: white;
+  font-size: 19px;
+  box-shadow: 0 12px 28px rgba(18,103,210,.2);
+}
+.cbtn + .cbtn { background: linear-gradient(100deg, #1773ef, #398eed); }
+.cbtn:hover:not(:disabled) { background: linear-gradient(100deg, #1268ee, #20cfaa); border-color: transparent; }
+.cbtn.correct { background: linear-gradient(100deg, #0e9fc6, #27d5a0); color: white; }
+.cbtn.wrong { background: linear-gradient(100deg, #ff825c, #ff5a41); color: white; }
+
+.result-banner {
+  padding: 16px 18px;
+  border-radius: 18px;
+  font-size: 16px;
+  text-align: center;
+}
+.rb-ok { border: 1px solid rgba(17,188,159,.3); background: #e8fff9; color: #087b6c; }
+.rb-bad { border: 1px solid rgba(255,104,70,.32); background: #fff1ed; color: #c84226; }
+
+.prescription {
+  padding: 18px;
+  border-color: var(--line);
+  border-radius: 20px;
+  background: rgba(248,252,255,.92);
+}
+.rx-t { color: var(--brand); }
+.rx-body { color: var(--ink); font-size: 14px; }
+.rx-src { color: var(--muted); }
+
+.next-btn {
+  min-height: 58px;
+  font-size: 17px;
+}
+.next-btn:hover { background: linear-gradient(100deg, #1268ee, #20cfaa); border-color: transparent; }
+
+#result {
+  position: relative;
+  width: min(100vw, var(--h5-max-width));
+  max-width: none;
+  min-height: var(--h5-min-height);
+  margin: 0 auto;
+  padding: max(24px, env(safe-area-inset-top)) 20px max(30px, env(safe-area-inset-bottom));
+  background:
+    linear-gradient(rgba(235,249,255,.45), rgba(235,249,255,.54)),
+    url("./zhenshangdabai-assets/backgrounds/bg_result.webp") center/cover no-repeat;
+}
+.result-card {
+  margin-top: 5vh;
+  padding: 26px 22px;
+  border: 1px solid rgba(76,157,242,.38);
+  border-radius: 30px;
+  background: rgba(255,255,255,.88);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+.result-emoji {
+  width: 132px;
+  height: 132px;
+  margin: 0 auto 14px;
+  font-size: 0;
+  background: url("./zhenshangdabai-assets/badges/badge_intern.webp") center/contain no-repeat;
+}
+.result-title {
+  font-family: var(--sans);
+  color: var(--brand-deep);
+  font-size: 31px;
+  font-weight: 900;
+}
+.rs-card {
+  border: 1px solid rgba(79,157,238,.2);
+  background: #f4faff;
+}
+.rs-v { color: var(--brand); }
+.final-msg { background: linear-gradient(135deg, #edf8ff, #ecfff9); }
+.result-next-btn { min-height: 62px; font-size: 19px; }
+.result-home-btn {
+  width: 100%;
+  min-height: 50px;
+  margin-top: 12px;
+  border: 1px solid rgba(13,93,222,.3);
+  border-radius: 999px;
+  background: rgba(255,255,255,.78);
+  color: var(--brand-deep);
+  font: 800 15px var(--sans);
+}
+
+.boss-article {
+  border-color: rgba(75,143,223,.28);
+  border-radius: 18px;
+  background: rgba(245,250,255,.94);
+}
+.boss-item { border-bottom-color: #deebf7; }
+.boss-item.selected-rumor { background: #fff1ed; }
+.boss-submit-btn { min-height: 56px; }
+
+.game-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: none;
+  place-items: center;
+  padding: 22px;
+  background: rgba(7,39,92,.38);
+  backdrop-filter: blur(10px);
+}
+.game-modal.show { display: grid; }
+.modal-panel {
+  width: min(100%, 520px);
+  max-height: 82vh;
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid rgba(82,162,240,.4);
+  border-radius: 28px;
+  background: rgba(255,255,255,.95);
+  box-shadow: 0 24px 70px rgba(26,78,142,.3);
+}
+.modal-panel h2 { color: var(--brand-deep); text-align: center; }
+.modal-panel p { margin-top: 10px; color: var(--muted); line-height: 1.7; }
+.rule-list { display: grid; gap: 10px; margin-top: 18px; }
+.rule-row {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #deebf7;
+  border-radius: 15px;
+  background: #f7fbff;
+  color: #335477;
+  font-size: 13px;
+}
+.rule-row b {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, var(--brand), var(--cyan));
+  color: white;
+}
+.modal-close {
+  width: 100%;
+  min-height: 50px;
+  margin-top: 18px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(100deg, var(--brand), var(--cyan));
+  color: white;
+  font: 700 15px var(--sans);
+}
+
+.score-rules, .honor-rules {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+.score-rule-card, .honor-rule {
+  padding: 14px;
+  border: 1px solid #dbe9f5;
+  border-radius: 14px;
+  background: #f7fbff;
+}
+.score-rule-card strong, .honor-rule strong {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--brand-deep);
+}
+.score-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.score-line b { color: #08a178; }
+.score-total {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid #dbe9f5;
+  color: var(--brand-deep);
+  font-weight: 800;
+}
+.honor-rule {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  align-items: center;
+  gap: 10px;
+}
+.honor-icon { font-size: 24px; }
+.honor-rule strong { margin: 0; }
+.honor-rule span { color: var(--muted); font-size: 12px; }
+.honor-rule.sss { background: #fffbe4; border-color: #f2e7a5; }
+.honor-rule.ss { background: #f6f1ff; border-color: #e7dbff; }
+.honor-rule.s { background: #edf8ff; border-color: #d6eafb; }
+.honor-rule.a { background: #f6f8fa; }
+.honor-result {
+  display: none;
+  margin: 0 0 18px;
+  padding: 16px;
+  border: 1px solid #d5e8f5;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #fffbe5, #edfaff);
+  text-align: center;
+}
+.honor-result.show { display: block; }
+.honor-result-label { color: var(--muted); font-size: 12px; }
+.honor-result-name {
+  margin-top: 4px;
+  color: var(--brand-deep);
+  font-size: 22px;
+  font-weight: 900;
+}
+.honor-result-grade { color: #ee9b16; font-weight: 800; }
+
+@media (min-width: 600px) {
+  #game { padding-inline: 52px; }
+  .patient-card { padding: 26px; }
+}
+
+@media (max-width: 520px) {
+  #game, #result { padding-left: 12px; padding-right: 12px; }
+  #game { overflow-x: hidden; }
+  #map-page { padding-left: 12px; padding-right: 12px; }
+  .map-nav { gap: 6px; }
+  .map-brand span { display: none; }
+  .map-actions { margin-left: auto; }
+  .map-action { padding-inline: 8px; font-size: 10px; }
+  .map-profile {
+    grid-template-columns: 64px minmax(0,1fr) 56px;
+    gap: 9px;
+    padding: 11px;
+  }
+  .map-avatar { width: 64px; }
+  .map-doctor-name { overflow: hidden; font-size: 17px; text-overflow: ellipsis; white-space: nowrap; }
+  .map-doctor-level { font-size: 10px; }
+  .map-score { font-size: 19px; }
+  .map-level { width: 94%; grid-template-columns: 64px minmax(0,1fr) 30px; }
+  .map-level-icon { width: 62px; height: 62px; }
+  .map-level strong { font-size: 15px; }
+  .top-bar { gap: 7px; }
+  .top-identity { gap: 7px; }
+  .top-title { font-size: 17px; white-space: nowrap; }
+  .top-stats { flex: 0 0 auto; gap: 5px; }
+  .stat-item { min-width: 46px; padding: 6px 5px; }
+  .stat-v { font-size: 17px; }
+  .back-btn { flex-basis: 34px; width: 34px; height: 34px; }
+}
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <button class="cover-hotspot start splash-btn" onclick="showRolePage()" aria-label="开始体验">开始体验</button>
+</div>
+
+<div id="role-select">
+  <button class="role-back" onclick="returnToCover()" aria-label="返回封面"></button>
+  <button class="role-card male" id="maleCard" onclick="selectGender('male')" aria-label="选择男医生"></button>
+  <button class="role-card female" id="femaleCard" onclick="selectGender('female')" aria-label="选择女医生"></button>
+  <input class="doctor-code" id="doctorCode" maxlength="18" autocomplete="off" placeholder="例如：夜航医生 / Echo-03" aria-label="门诊代号">
+  <button class="role-confirm" onclick="confirmRole()" aria-label="进入接诊系统"></button>
+</div>
+
+<div id="intro-page" class="male">
+  <button class="intro-hotspot intro-rules" onclick="openModal('rules-modal')" aria-label="打开规则说明"></button>
+  <button class="intro-hotspot intro-history" onclick="openModal('history-modal')" aria-label="打开历史记录"></button>
+  <button class="intro-hotspot intro-start" onclick="showMapPage()" aria-label="开始接诊"></button>
+</div>
+
+<div id="map-page">
+  <div class="map-nav">
+    <div class="map-brand">
+      <button class="map-back" onclick="returnToIntro()" aria-label="返回情境引入页">‹</button>
+      <div class="map-brand-mark">✓</div><span>健康信息核查处</span>
+    </div>
+    <div class="map-actions">
+      <button class="map-action" onclick="openModal('rules-modal')">规则说明</button>
+      <button class="map-action" onclick="openModal('history-modal')">历史记录</button>
+    </div>
+  </div>
+  <div class="map-profile">
+    <img class="map-avatar" id="map-avatar" alt="医生头像" decoding="async">
+    <div>
+      <div class="map-doctor-name" id="map-doctor-name">门诊医生</div>
+      <div class="map-doctor-level" id="map-doctor-level">实习医生 · 基础辨别</div>
+    </div>
+    <div class="map-score"><span id="map-points">0</span><small>累计积分</small></div>
+  </div>
+  <div class="map-title">接诊关卡地图</div>
+  <div class="map-subtitle">完成信息核查任务，逐步提升医生等级</div>
+  <div class="level-map" id="level-map"></div>
+</div>
+
+<div id="game">
+  <div class="top-bar">
+    <div class="top-identity">
+      <button class="back-btn" onclick="returnToMap()" aria-label="返回关卡地图" title="返回关卡地图">‹</button>
+      <div>
+        <div class="top-title">“诊”相大白</div>
+        <div class="top-sub" id="top-sub">第1关 · 实习医生</div>
+      </div>
+    </div>
+    <div class="top-stats">
+      <div class="stat-item"><div class="stat-v" id="points">0</div><div class="stat-l">积分</div></div>
+      <div class="stat-item"><div class="stat-v" id="total-seen">0</div><div class="stat-l">已核查</div></div>
+    </div>
+  </div>
+
+  <div class="level-strip">
+    <div class="level-tag" id="level-tag">实习医生</div>
+    <div class="prog-area">
+      <div class="prog-lbl">第 <span id="q-num">1</span> / <span id="q-total">5</span> 题</div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+    </div>
+  </div>
+
+  <div class="scene-strip" id="scene-strip">门诊走廊，候诊区坐满了人。</div>
+
+  <div class="patient-card">
+    <div class="p-head">
+      <div class="p-emo" id="p-emo"><img id="p-avatar" src="./zhenshangdabai-assets/patients/patient_aunt_01.webp" alt="" decoding="async"></div>
+      <div class="p-info">
+        <div class="p-name" id="p-name">王阿姨</div>
+        <div class="p-chief" id="p-chief">主诉：感冒咨询</div>
+        <div class="p-badge badge-wait" id="p-badge">候诊中</div>
+      </div>
+    </div>
+    <div class="says-lbl">居民说：</div>
+    <div class="bubble" id="bubble">...</div>
+    <div class="q-label" id="q-label">这条健康信息是？</div>
+    <div class="choices" id="choices">
+      <button class="cbtn" id="btn-t" onclick="answer(true)">✓ 科学真相</button>
+      <button class="cbtn" id="btn-f" onclick="answer(false)">✕ 健康谣言</button>
+    </div>
+
+    <div id="boss-area" style="display:none;">
+      <div class="boss-hint">点击选择你认为是谣言的条目（共2条）</div>
+      <div class="boss-article" id="boss-article"></div>
+      <button class="boss-submit-btn" id="boss-submit" onclick="submitBoss()" disabled>提交判断</button>
+    </div>
+
+    <div class="result-banner" id="result-banner"></div>
+    <div class="prescription" id="prescription">
+      <div class="rx-header">
+        <div class="rx-cross">⚕️</div>
+        <div>
+          <div class="rx-t">诊断意见书</div>
+          <div class="rx-h">门诊科 · 健康信息核查室</div>
+        </div>
+      </div>
+      <div class="rx-body" id="rx-body"></div>
+      <div class="rx-src" id="rx-src"></div>
+      <div class="rx-stamp">已核查</div>
+    </div>
+    <button class="next-btn" id="next-btn" onclick="nextQ()">下一位居民 →</button>
+  </div>
+  <button class="scroll-hint" id="scroll-hint" onclick="scrollToGameTip()" aria-label="向下滑动查看核查提示">向下滑动查看核查提示</button>
+  <div class="game-footer-scene" id="game-footer-scene">
+    <div class="game-footer-copy">
+      <strong>🔍 核查小提示</strong>
+      <span>谣言很会伪装，但有几个习惯会露馅——<b class="tip-emphasis">来源说不清楚、结论特别绝对、真假信息混着说</b>。发现其中一条，就值得多想一秒~</span>
+    </div>
+    <img class="game-footer-doctor" id="game-footer-doctor" src="./zhenshangdabai-assets/doctor/doctor_explain.webp" alt="核查医生" loading="lazy" decoding="async">
+  </div>
+</div>
+
+<div class="game-modal" id="rules-modal" onclick="closeModalOnBackdrop(event)">
+  <div class="modal-panel">
+    <h2>核查规则</h2>
+    <p>阅读居民提供的健康信息，根据科学依据作出判断，逐步完成从实习医生到主任医师的成长挑战。</p>
+    <div class="rule-list">
+      <div class="rule-row"><b>1</b><span>每关包含5条健康信息，选择“科学真相”或“健康谣言”。</span></div>
+      <div class="rule-row"><b>2</b><span>答题后会展示医生解释和可靠信息来源。</span></div>
+      <div class="rule-row"><b>3</b><span>完成当前关卡即可晋升，并解锁下一阶段。</span></div>
+      <div class="rule-row"><b>4</b><span>Boss关需要从文章中找出2条隐藏谣言。</span></div>
+    </div>
+    <div class="score-rules">
+      <div class="score-rule-card">
+        <strong>🏅 普通关卡（第1-4关）</strong>
+        <div class="score-line"><span>每关5题，答对1题</span><b>+20分</b></div>
+        <div class="score-line"><span>答错</span><span>+0分</span></div>
+        <div class="score-total">单关满分 100分</div>
+      </div>
+      <div class="score-rule-card">
+        <strong>♛ Boss关（第5关）</strong>
+        <div class="score-line"><span>从5条信息中找出2条谣言</span><span></span></div>
+        <div class="score-line"><span>每正确找出1条谣言</span><b>+50分</b></div>
+        <div class="score-total">Boss关满分 100分</div>
+      </div>
+      <div class="score-rule-card"><strong>🏆 全部通关满分：500分</strong></div>
+    </div>
+    <h2 style="margin-top:22px;">称号体系</h2>
+    <div class="honor-rules">
+      <div class="honor-rule sss"><div class="honor-icon">👑</div><div><strong>首席健康守护官</strong><span>正确率 ≥ 95% · SSS级</span></div></div>
+      <div class="honor-rule ss"><div class="honor-icon">💎</div><div><strong>谣言粉碎机</strong><span>正确率 80%-94% · SS级</span></div></div>
+      <div class="honor-rule s"><div class="honor-icon">🛡️</div><div><strong>健康观察员</strong><span>正确率 60%-79% · S级</span></div></div>
+      <div class="honor-rule a"><div class="honor-icon">🌱</div><div><strong>谣言易感人群</strong><span>正确率 ＜ 60% · A级</span></div></div>
+    </div>
+    <button class="modal-close" onclick="closeModal('rules-modal')">知道了</button>
+  </div>
+</div>
+
+<div class="game-modal" id="history-modal" onclick="closeModalOnBackdrop(event)">
+  <div class="modal-panel">
+    <h2>历史记录</h2>
+    <p id="history-content">暂无挑战记录。完成一次关卡后，这里将显示累计答对、接诊数量和最高等级。</p>
+    <button class="modal-close" onclick="closeModal('history-modal')">关闭</button>
+  </div>
+</div>
+
+<div id="result">
+  <div class="result-card">
+    <div class="result-emoji" id="res-emoji">🎉</div>
+    <div class="result-title" id="res-title">关卡完成</div>
+    <div class="result-sub" id="res-sub"></div>
+    <div class="result-stats">
+      <div class="rs-card"><div class="rs-v" id="res-score">0</div><div class="rs-l">累计积分</div></div>
+      <div class="rs-card"><div class="rs-v" id="res-rate">0%</div><div class="rs-l">正确率</div></div>
+    </div>
+    <div class="honor-result" id="honor-result">
+      <div class="honor-result-label">最终荣誉评级</div>
+      <div class="honor-result-name" id="honor-name"></div>
+      <div class="honor-result-grade" id="honor-grade"></div>
+    </div>
+    <div class="final-msg" id="res-msg"></div>
+    <button class="result-next-btn" id="res-btn" onclick="goNextLevel()">进入下一关 →</button>
+    <button class="result-home-btn" onclick="returnToMap()">返回关卡地图</button>
+  </div>
+</div>
+
+<script>
+const LEVELS = [
+  {
+    name:'第1关',
+    level:'实习医生',
+    theme:'社区门诊初体验',
+    questions:[
+      {
+        emoji:'👵',
+        name:'王阿姨，62岁',
+        chief:'主诉：感冒咨询',
+        scene:'门诊走廊，候诊区坐满了人。社区工作人员说：“1号诊室来了位阿姨，想咨询感冒偏方……”',
+        bubble:'医生，我感冒了。朋友说喝热水能把病毒“烫死”，我现在就在这么做，你觉得这个方法有科学依据吗？',
+        answer:false,
+        rx:'喝热水无法把病毒“烫死”。人体能承受的饮水温度远低于杀灭病毒所需温度。感冒时适量饮水可以补充水分、缓解咽喉不适，但不能直接杀灭病毒。',
+        src:'来源：丁香医生'
+      },
+      {
+        emoji:'👴',
+        name:'李大爷，70岁',
+        chief:'主诉：用药咨询',
+        scene:'李大爷手里拿着一包中药来到诊室，想问问绿豆汤和药能不能一起用。',
+        bubble:'医生，朋友圈说绿豆汤能解百毒，连药都能解！我最近在吃高血压药，就一直搭着喝绿豆汤，这样可以吗？',
+        answer:false,
+        rx:'“解百毒”严重夸大了绿豆的功效。绿豆汤只是普通食物，不能代替正规治疗，也不能随意和药物搭配。服药期间如需调整饮食，应咨询医生或药师。',
+        src:'来源：科普中国'
+      },
+      {
+        emoji:'🧑',
+        name:'小张，28岁',
+        chief:'主诉：咨询预防方法',
+        scene:'年轻人推门进来，口罩戴得严严实实。他想确认每天漱口的习惯有没有用。',
+        bubble:'医生，我每天用淡盐水漱口，听说能杀菌，连病毒都能防住。我最近都在坚持，你觉得这个方法靠谱吗？',
+        answer:false,
+        rx:'淡盐水漱口可以在一定程度上清洁口腔，但无法预防所有病毒感染。病毒主要经呼吸道、接触等途径传播，不能把漱口当作主要防护方式。',
+        src:'来源：较真平台'
+      },
+      {
+        emoji:'👩',
+        name:'赵女士，45岁',
+        chief:'主诉：便秘咨询',
+        scene:'赵女士走进诊室，拿着一份饮食建议单。她朋友推荐她多吃蔬菜水果，她想问问有没有道理。',
+        bubble:'医生，我最近便秘，朋友建议我多吃蔬菜水果补充膳食纤维，说能促进肠胃蠕动。我打算试试，这个说法有根据吗？',
+        answer:true,
+        rx:'这个说法有一定科学依据。膳食纤维能够增加粪便体积、促进肠道蠕动，对改善便秘有帮助。但也要注意饮水和运动，严重便秘应及时就医。',
+        src:'来源：科普中国'
+      },
+      {
+        emoji:'🧓',
+        name:'陈阿姨，55岁',
+        chief:'主诉：养生习惯咨询',
+        scene:'陈阿姨笑眯眯地走进来，想确认自己的早晨习惯是否健康。她每天都在坚持。',
+        bubble:'医生，我每天早上喝一杯温热蜂蜜水，听说能润肠通便。我准备长期坚持，这个习惯对身体好吗？',
+        answer:true,
+        rx:'适量饮用蜂蜜水对部分人有润肠通便的帮助，但不能被夸大为治疗便秘的“神方”。蜂蜜含糖量较高，糖尿病患者和需要控糖的人群应谨慎。',
+        src:'来源：丁香医生'
+      }
+    ]
+  },
+  {
+    name:'第2关',
+    level:'住院医师',
+    theme:'家庭健康咨询室',
+    questions:[
+      {
+        emoji:'🏃',
+        name:'老王，58岁',
+        chief:'主诉：饭后运动咨询',
+        scene:'老王走进诊室，说家里一直有饭后散步的传统，想问问医生这样对不对。',
+        bubble:'医生，我们家有饭后立刻散步的习惯，说是能助消化。我一直在坚持，这个做法对吗？',
+        answer:false,
+        rx:'饭后立即运动并不一定有助消化，反而可能让血液更多流向四肢，影响胃肠消化。一般建议饭后先休息一段时间，再进行轻度活动。',
+        src:'来源：丁香医生'
+      },
+      {
+        emoji:'👨',
+        name:'小赵，35岁',
+        chief:'主诉：骨折后营养咨询',
+        scene:'小赵拿着骨折报告走进来，家里人一直给他煮骨头汤，他想问问是否真的补钙。',
+        bubble:'医生，我骨折了，家里人说多喝骨头汤能补钙，我每天喝两碗。骨头汤补钙的说法是真的吗？',
+        answer:false,
+        rx:'骨头汤中的钙含量并不高，反而可能含有较多脂肪。骨折后补钙应选择更可靠的膳食来源，如奶制品、豆制品，必要时遵医嘱补充钙剂。',
+        src:'来源：科普中国'
+      },
+      {
+        emoji:'💪',
+        name:'小李，30岁',
+        chief:'主诉：减肥方法咨询',
+        scene:'小李走进诊室，问关于运动减肥的技巧。他朋友跟他说了个“出汗减肥法”。',
+        bubble:'医生，我想减肥。朋友说出汗越多减肥效果越好，建议我运动时穿厚一点。这个方法有道理吗？',
+        answer:false,
+        rx:'大量出汗主要减少的是水分，不等于脂肪消耗。捂汗可能导致脱水、中暑等风险。减脂更依赖长期合理运动和饮食管理。',
+        src:'来源：较真平台'
+      },
+      {
+        emoji:'😴',
+        name:'林女士，40岁',
+        chief:'主诉：失眠咨询',
+        scene:'林女士进来问睡眠问题，说朋友推荐她睡前喝热牛奶，她想先问问医生。',
+        bubble:'医生，我最近失眠。朋友说睡前喝热牛奶有助于睡眠，说是里面的色氨酸能帮助放松。我准备试试，这个说法靠谱吗？',
+        answer:true,
+        rx:'睡前适量喝温牛奶可能对部分人有放松作用，也能形成睡前仪式感。但它不是治疗失眠的药物，长期失眠仍需关注作息、压力和必要的医学评估。',
+        src:'来源：丁香医生'
+      },
+      {
+        emoji:'🥬',
+        name:'吴阿姨，50岁',
+        chief:'主诉：贫血饮食咨询',
+        scene:'吴阿姨拿着上次的检查报告来问饮食调理。她查到菠菜含铁，想知道有没有用。',
+        bubble:'医生，你上次说我轻度贫血，我查到说菠菜含铁量高，打算每天多吃菠菜补铁。菠菜补铁这个说法有科学依据吗？',
+        answer:true,
+        rx:'菠菜含有一定铁元素，但主要是非血红素铁，吸收率相对有限。它可以作为均衡饮食的一部分，但不能完全替代规范补铁。缺铁性贫血应遵医嘱处理。',
+        src:'来源：科普中国'
+      }
+    ]
+  },
+  {
+    name:'第3关',
+    level:'主治医师',
+    theme:'朋友圈养生局',
+    questions:[
+      {
+        emoji:'🧓',
+        name:'钱大爷，68岁',
+        chief:'主诉：养生方法咨询',
+        scene:'钱大爷走进诊室，手里拿着一张从公众号截下来的图，准备开始照着做。',
+        bubble:'医生，我在公众号看到某三甲医院研究证明，早上空腹喝盐水能排毒清肠。我准备开始坚持，这个说法可信吗？',
+        answer:false,
+        rx:'“盐水排毒”缺乏可靠科学依据。长期空腹喝盐水可能增加钠摄入，对高血压等人群尤其不友好。看到“某医院研究”这类模糊表述时，应进一步核查来源。',
+        src:'来源：较真平台'
+      },
+      {
+        emoji:'🤔',
+        name:'小周，25岁',
+        chief:'主诉：饮食习惯咨询',
+        scene:'小周走进来，手机里打开了一篇阅读量很高的养生文章。',
+        bubble:'医生，我看了篇文章说权威营养学家建议每天吃生鸡蛋，蛋白质吸收更好。我想照着做，这个说法对吗？',
+        answer:false,
+        rx:'生鸡蛋并不会让蛋白质吸收更好，还可能带来沙门氏菌等食品安全风险。鸡蛋应充分加热后食用，更安全也更利于消化吸收。',
+        src:'来源：丁香医生'
+      },
+      {
+        emoji:'👧',
+        name:'小孙，5岁（家长陪同）',
+        chief:'主诉：发烧处理咨询',
+        scene:'年轻妈妈抱着孩子走进门诊。她在网上看到了一个儿科医生的视频，想来问问。',
+        bubble:'医生，我孩子烧到38.3度，我看到一个儿科医生视频说低于38.5度可以先观察，让身体自己抵抗。这个建议可以信吗？',
+        answer:true,
+        rx:'一般情况下，低热可先观察孩子精神状态，并采用补水、休息、物理降温等方式处理。但是否用药还需结合年龄、基础疾病和症状变化，必要时应及时就医。',
+        src:'来源：科普中国'
+      },
+      {
+        emoji:'👩‍🦳',
+        name:'方阿姨，60岁',
+        chief:'主诉：咖啡与骨骼健康咨询',
+        scene:'方阿姨走进来，说看到一张论文截图，正在考虑要不要戒掉多年喝咖啡的习惯。',
+        bubble:'医生，我看到一张论文截图说每天喝咖啡会导致骨质疏松。我在考虑把咖啡戒掉，这个说法有依据吗？',
+        answer:false,
+        rx:'“喝咖啡一定导致骨质疏松”的说法过于绝对。适量饮用咖啡通常不必过度恐慌。论文截图可能存在断章取义，应结合完整研究背景、饮用量和个体情况判断。',
+        src:'来源：丁香医生'
+      },
+      {
+        emoji:'💼',
+        name:'程先生，42岁',
+        chief:'主诉：久坐健康咨询',
+        scene:'程先生西装笔挺地走进来，公司最近在推一个健康建议，他想确认是否科学。',
+        bubble:'医生，我看到官方建议说久坐每小时应该起来活动5-10分钟，能降低健康风险。我想在公司推广，这个说法是真的吗？',
+        answer:true,
+        rx:'这个建议有科学依据。长期久坐会增加多种慢性病风险，定时起身活动有助于改善血液循环、缓解肌肉紧张，也能帮助形成更健康的工作习惯。',
+        src:'来源：科普中国'
+      }
+    ]
+  },
+  {
+    name:'第4关',
+    level:'副主任医师',
+    theme:'健康风险复核室',
+    questions:[
+      {
+        emoji:'👴',
+        name:'赵大爷，72岁',
+        chief:'主诉：维生素补充咨询',
+        scene:'赵大爷拿着一张保健品广告单走进来，想问问医生能不能照着做。',
+        bubble:'医生，广告说大量补充维生素C能强健骨骼、预防关节炎。我打算每天多吃几颗，这个说法靠谱吗？',
+        answer:false,
+        rx:'维生素C对人体有必要作用，但大量补充并不能预防关节炎。过量补充还可能引发腹泻、胃肠不适等问题。保健品广告中的功效承诺需要谨慎看待。',
+        src:'来源：丁香医生'
+      },
+      {
+        emoji:'🤰',
+        name:'小薛，29岁',
+        chief:'主诉：孕期饮食咨询',
+        scene:'小薛挺着大肚子走进来，家里人给了她很多饮食禁忌，她有些困惑。',
+        bubble:'医生，我怀孕了，家里人说孕期绝对不能吃螃蟹，说吃了会流产。我特别想吃，这个禁忌是真的吗？',
+        answer:false,
+        rx:'“孕期吃螃蟹一定会流产”的说法过于绝对。健康孕妇在食物新鲜、充分加热、不过量且不过敏的前提下，可以根据自身情况适量食用。孕期饮食更应关注安全和均衡。',
+        src:'来源：科普中国'
+      },
+      {
+        emoji:'🧒',
+        name:'小明，8岁（奶奶陪同）',
+        chief:'主诉：视力下降，护眼咨询',
+        scene:'奶奶牵着小明走进来，想问一直以来的护眼方法有没有科学依据。',
+        bubble:'医生，我从小就让孙子多吃胡萝卜，说吃胡萝卜能保护眼睛、预防近视。这个说法有根据吗？',
+        answer:false,
+        rx:'胡萝卜中的β-胡萝卜素有助于维持正常视觉功能，但不能预防或逆转近视。近视主要与遗传、用眼习惯、户外活动时间等因素有关。',
+        src:'来源：较真平台'
+      },
+      {
+        emoji:'🏋️',
+        name:'小刘，22岁',
+        chief:'主诉：健身饮食咨询',
+        scene:'小刘最近开始认真健身，很在意运动后补充蛋白质的问题。',
+        bubble:'医生，健身博主说运动后补充蛋白质有助于肌肉修复。我每次运动后都会吃点蛋白质，这个说法准确吗？',
+        answer:true,
+        rx:'运动后合理补充蛋白质有助于肌肉修复和合成，是有一定科学依据的。但并非必须卡在某个极端时间点，也不应过量摄入，应结合总饮食结构和训练强度。',
+        src:'来源：丁香医生'
+      },
+      {
+        emoji:'😰',
+        name:'宋先生，50岁',
+        chief:'主诉：排毒方法咨询',
+        scene:'宋先生最近在研究养生，看到一篇文章让他很心动，想来问问医生的看法。',
+        bubble:'医生，我看到养生文章说大量出汗能把体内毒素排出去，打算每天蒸桑拿。这样做对身体好吗？',
+        answer:false,
+        rx:'“出汗排毒”的说法缺乏科学依据。人体代谢废物主要通过肝脏、肾脏等器官处理，汗液并不是主要排毒途径。过度桑拿还可能导致脱水、头晕和心血管负担增加。',
+        src:'来源：科普中国'
+      }
+    ]
+  },
+  {
+    name:'Boss关',
+    level:'主任医师',
+    theme:'主任医师综合考核',
+    isBoss:true,
+    bossData:{
+      emoji:'📰',
+      name:'朋友圈爆款文章',
+      chief:'正在社区群热传，已有许多居民转发',
+      scene:'社区工作人员拿着一篇热传文章来到诊室：“主任，今天好几个居民都拿这篇文章来问，您快看看，里面哪些说法是谣言？”',
+      title:'《养生必看！5个让你更健康的生活习惯》',
+      items:[
+        {
+          id:1,
+          text:'每天保持7-8小时睡眠，有助于免疫系统修复和记忆力巩固，是最基础的健康习惯。',
+          isRumor:false,
+          explain:'正确。充足睡眠对免疫功能、情绪稳定和记忆巩固都有重要意义。'
+        },
+        {
+          id:2,
+          text:'睡前用温热水泡脚，能促进下肢血液循环，帮助放松身心，部分人会感觉更容易入睡。',
+          isRumor:false,
+          explain:'基本属实。温热水泡脚可帮助放松，但水温不宜过高，糖尿病足、感觉障碍等特殊人群需谨慎。'
+        },
+        {
+          id:3,
+          text:'据权威机构研究，每天清晨喝一杯淡醋水能软化血管，长期坚持可预防心血管疾病。',
+          isRumor:true,
+          explain:'这是谣言。“喝醋软化血管”没有可靠临床依据。血管硬化是复杂的病理过程，不能靠喝醋逆转，长期饮醋还可能刺激食管和胃黏膜。'
+        },
+        {
+          id:4,
+          text:'每周保持适量有氧运动，有助于降低慢性病风险，也能改善心肺功能和身体代谢。',
+          isRumor:false,
+          explain:'正确。规律运动对心肺功能、血糖血脂管理和体重控制都有积极意义。'
+        },
+        {
+          id:5,
+          text:'维生素C能直接杀灭感冒病毒，感冒时大量服用可以快速痊愈。',
+          isRumor:true,
+          explain:'这是谣言。维生素C不能直接杀灭感冒病毒，也不能保证快速治愈感冒。大量服用还可能带来胃肠不适等风险。'
+        }
+      ],
+      rumorIds:[3,5]
+    }
+  }
+];
+
+let curLevel=0, curQ=0, score=0, points=0, totalSeen=0;
+let bossSelected=[], bossSubmitted=false, bossResult=null;
+let answerRecords={};
+let unlockedLevel=Math.max(1,Number(safeStorageGet('zhenshangdabai-unlocked','1')) || 1);
+let userProfile={
+  gender:null,
+  code:null
+};
+const PATIENT_IMAGE_BY_NAME={
+  '王阿姨，62岁':'patient_aunt_01.webp',
+  '李大爷，70岁':'patient_uncle_02.webp',
+  '小张，28岁':'patient_young_male.webp',
+  '赵女士，45岁':'patient_office_female.webp',
+  '陈阿姨，55岁':'patient_aunt_02.webp',
+  '老王，58岁':'patient_uncle_01.webp',
+  '小赵，35岁':'patient_office_male.webp',
+  '小李，30岁':'patient_young_male.webp',
+  '林女士，40岁':'patient_office_female.webp',
+  '吴阿姨，50岁':'patient_aunt_02.webp',
+  '钱大爷，68岁':'patient_uncle_02.webp',
+  '小周，25岁':'patient_young_male.webp',
+  '小孙，5岁（家长陪同）':'patient_child_family.webp',
+  '方阿姨，60岁':'patient_aunt_01.webp',
+  '程先生，42岁':'patient_office_male.webp',
+  '赵大爷，72岁':'patient_uncle_02.webp',
+  '小薛，29岁':'patient_pregnant.webp',
+  '小明，8岁（奶奶陪同）':'patient_child_family.webp',
+  '小刘，22岁':'patient_young_male.webp',
+  '宋先生，50岁':'patient_uncle_01.webp'
+};
+const BADGE_IMAGES=[
+  'badge_intern.webp',
+  'badge_resident.webp',
+  'badge_attending.webp',
+  'badge_associate.webp',
+  'badge_chief.webp'
+];
+const MAP_LEVELS=[
+  {title:'社区门诊初诊',subtitle:'基础辨别',icon:'level_01_clinic.webp'},
+  {title:'家庭健康咨询',subtitle:'信息核验',icon:'level_02_family.webp'},
+  {title:'朋友圈信息筛查',subtitle:'证据判断',icon:'level_03_social.webp'},
+  {title:'急诊风险判断',subtitle:'综合研判',icon:'level_04_emergency.webp'},
+  {title:'主任医师考核',subtitle:'Boss终极核查',icon:'level_05_boss.webp',boss:true}
+];
+
+function safeStorageGet(key, fallback=''){
+  try { return localStorage.getItem(key) ?? fallback; } catch(e) { return fallback; }
+}
+
+function safeStorageSet(key, value){
+  try { localStorage.setItem(key, value); } catch(e) {}
+}
+
+function safeStorageRemove(key){
+  try { localStorage.removeItem(key); } catch(e) {}
+}
+
+function saveGameState(){
+  safeStorageSet('zhenshangdabai-game-state',JSON.stringify({
+    curLevel,
+    curQ,
+    score,
+    points,
+    totalSeen,
+    answerRecords,
+    bossSelected,
+    bossSubmitted,
+    bossResult,
+    unlockedLevel
+  }));
+}
+
+function loadGameState(){
+  try{
+    const state=JSON.parse(safeStorageGet('zhenshangdabai-game-state','null'));
+    if(!state) return;
+    curLevel=Math.max(0,Math.min(LEVELS.length-1,Number(state.curLevel) || 0));
+    curQ=Math.max(0,Number(state.curQ) || 0);
+    score=Math.max(0,Number(state.score) || 0);
+    points=Math.max(0,Math.min(500,Number(state.points) || 0));
+    totalSeen=Math.max(0,Number(state.totalSeen) || 0);
+    answerRecords=state.answerRecords && typeof state.answerRecords==='object' ? state.answerRecords : {};
+    bossSelected=Array.isArray(state.bossSelected) ? state.bossSelected : [];
+    bossSubmitted=Boolean(state.bossSubmitted);
+    bossResult=state.bossResult || null;
+    unlockedLevel=Math.max(
+      1,
+      Number(state.unlockedLevel) || 1,
+      Number(safeStorageGet('zhenshangdabai-unlocked','1')) || 1
+    );
+  }catch(e){}
+}
+
+function openModal(id){
+  if(id==='history-modal') renderHistory();
+  document.getElementById(id).classList.add('show');
+}
+
+function closeModal(id){
+  document.getElementById(id).classList.remove('show');
+}
+
+function closeModalOnBackdrop(event){
+  if(event.target.classList.contains('game-modal')) event.target.classList.remove('show');
+}
+
+function renderHistory(){
+  const saved=safeStorageGet('zhenshangdabai-history','');
+  const node=document.getElementById('history-content');
+  if(!saved){
+    node.textContent='暂无挑战记录。完成一次关卡后，这里将显示累计答对、接诊数量和最高等级。';
+    return;
+  }
+  try{
+    const history=JSON.parse(saved);
+    node.innerHTML=history.slice(0,8).map(item=>
+      `<span style="display:block;padding:11px 0;border-bottom:1px solid #deebf7">
+        <b style="color:#0d5dde">${item.level}</b> · 正确率 ${item.rate}%<br>
+        <small>${item.date} · ${item.points ?? ((item.score || 0) * 20)}分 · 答对 ${item.score}/${item.total}</small>
+      </span>`
+    ).join('');
+  }catch(e){
+    node.textContent='历史记录暂时无法读取。';
+  }
+}
+
+function saveHistory(rate){
+  let history=[];
+  try { history=JSON.parse(safeStorageGet('zhenshangdabai-history','[]')); } catch(e) {}
+  history.unshift({
+    level: LEVELS[curLevel].level,
+    rate,
+    score,
+    points,
+    total: totalSeen,
+    date: new Date().toLocaleString('zh-CN')
+  });
+  safeStorageSet('zhenshangdabai-history', JSON.stringify(history.slice(0,20)));
+}
+
+function loadUserProfile(){
+  try{
+    const saved=JSON.parse(safeStorageGet('userProfile','null'));
+    if(saved){
+      userProfile={gender:null,code:saved.code || null};
+    }
+  }catch(e){}
+  userProfile.gender=null;
+  document.querySelectorAll('.role-card').forEach(card=>card.classList.remove('active'));
+  document.getElementById('doctorCode').value=userProfile.code || '';
+  syncDoctorProfile();
+}
+
+function syncDoctorProfile(){
+  const doctor=document.getElementById('game-footer-doctor');
+  if(!doctor) return;
+  const isMale=userProfile.gender==='male';
+  doctor.src=isMale
+    ? './zhenshangdabai-assets/doctor/doctor_male_explain.webp'
+    : './zhenshangdabai-assets/doctor/doctor_explain.webp';
+  doctor.alt=isMale ? '男性核查医生' : '女性核查医生';
+  doctor.classList.toggle('male',isMale);
+}
+
+function showRolePage(){
+  loadUserProfile();
+  history.pushState({screen:'role'},'',location.pathname+location.search+'#role');
+  document.getElementById('splash').style.display='none';
+  document.getElementById('game').style.display='none';
+  document.getElementById('map-page').style.display='none';
+  document.getElementById('result').style.display='none';
+  document.getElementById('role-select').style.display='block';
+  window.scrollTo({top:0,behavior:'auto'});
+}
+
+function selectGender(type){
+  userProfile.gender=type;
+  document.querySelectorAll('.role-card').forEach(card=>card.classList.remove('active'));
+  document.getElementById(type==='female' ? 'femaleCard' : 'maleCard').classList.add('active');
+  syncDoctorProfile();
+}
+
+function generateCode(){
+  const maleCodes=['夜航医生','Alpha-07','冷静诊断者'];
+  const femaleCodes=['Echo-03','白夜医生','星河诊疗者'];
+  const list=userProfile.gender==='female' ? femaleCodes : maleCodes;
+  return list[Math.floor(Math.random()*list.length)];
+}
+
+function confirmRole(){
+  const input=document.getElementById('doctorCode').value.trim();
+  if(!userProfile.gender){
+    document.querySelectorAll('.role-card').forEach(card=>{
+      card.classList.remove('role-error');
+      void card.offsetWidth;
+      card.classList.add('role-error');
+    });
+    return;
+  }
+  userProfile.code=input || generateCode();
+  document.getElementById('doctorCode').value=userProfile.code;
+  safeStorageSet('userProfile',JSON.stringify(userProfile));
+  showIntroPage();
+}
+
+function showIntroPage(){
+  const intro=document.getElementById('intro-page');
+  intro.className=userProfile.gender==='female' ? 'female' : 'male';
+  if(location.hash!=='#intro'){
+    history.pushState({screen:'intro'},'',location.pathname+location.search+'#intro');
+  }
+  document.getElementById('splash').style.display='none';
+  document.getElementById('role-select').style.display='none';
+  document.getElementById('game').style.display='none';
+  document.getElementById('map-page').style.display='none';
+  document.getElementById('result').style.display='none';
+  intro.style.display='block';
+  window.scrollTo({top:0,behavior:'auto'});
+}
+
+function renderMap(){
+  try{
+    const saved=JSON.parse(safeStorageGet('userProfile','null'));
+    if(saved) userProfile=saved;
+  }catch(e){}
+  unlockedLevel=Math.max(1,Number(safeStorageGet('zhenshangdabai-unlocked','1')) || 1);
+  document.getElementById('map-avatar').src=userProfile.gender==='female'
+    ? './zhenshangdabai-assets/map/doctor_female_avatar.webp'
+    : './zhenshangdabai-assets/map/doctor_male_avatar.webp';
+  document.getElementById('map-doctor-name').textContent=userProfile.code || '门诊医生';
+  const currentIndex=Math.min(unlockedLevel,5)-1;
+  document.getElementById('map-doctor-level').textContent=
+    LEVELS[currentIndex].level+' · '+MAP_LEVELS[currentIndex].subtitle;
+  document.getElementById('map-points').textContent=points;
+  document.getElementById('level-map').innerHTML=MAP_LEVELS.map((item,index)=>{
+    const level=index+1;
+    const locked=level>unlockedLevel;
+    const completed=level<unlockedLevel;
+    const current=level===unlockedLevel;
+    const status=locked ? '🔒 未解锁' : (completed ? '✓ 已完成' : '▶ 当前挑战');
+    return `<button class="map-level${locked?' locked':''}${current?' current':''}${item.boss?' boss':''}"
+      onclick="enterLevel(${level})" ${locked?'disabled':''}>
+      <img class="map-level-icon" src="./zhenshangdabai-assets/map/${item.icon}" alt="">
+      <div><strong>${item.boss?'Boss关':'第'+level+'关'} · ${item.title}</strong>
+      <span>${item.subtitle}</span><span class="map-level-status">${status}</span></div>
+      <div class="map-level-arrow">${locked?'·':'›'}</div>
+    </button>`;
+  }).join('');
+}
+
+function showMapPage(){
+  if(location.hash!=='#map'){
+    history.pushState({screen:'map'},'',location.pathname+location.search+'#map');
+  }
+  document.getElementById('splash').style.display='none';
+  document.getElementById('role-select').style.display='none';
+  document.getElementById('intro-page').style.display='none';
+  document.getElementById('game').style.display='none';
+  document.getElementById('result').style.display='none';
+  document.getElementById('map-page').style.display='block';
+  renderMap();
+  window.scrollTo({top:0,behavior:'auto'});
+}
+
+function enterLevel(level){
+  if(level>unlockedLevel) return;
+  curLevel=level-1;
+  curQ=0;
+  bossSelected=[];
+  bossSubmitted=false;
+  bossResult=null;
+  saveGameState();
+  startGame();
+}
+
+function startGame(){
+  if(!userProfile.gender){
+    try{
+      const saved=JSON.parse(safeStorageGet('userProfile','null'));
+      if(saved) userProfile=saved;
+    }catch(e){}
+  }
+  syncDoctorProfile();
+  if(location.hash!=='#game'){
+    history.pushState({screen:'game'},'',location.pathname+location.search+'#game');
+  }
+  document.getElementById('splash').style.display='none';
+  document.getElementById('role-select').style.display='none';
+  document.getElementById('intro-page').style.display='none';
+  document.getElementById('map-page').style.display='none';
+  document.getElementById('result').style.display='none';
+  document.getElementById('game').style.display='block';
+  renderQ();
+}
+
+function showHome(){
+  document.getElementById('game').style.display='none';
+  document.getElementById('role-select').style.display='none';
+  document.getElementById('intro-page').style.display='none';
+  document.getElementById('map-page').style.display='none';
+  document.getElementById('result').style.display='none';
+  document.getElementById('splash').style.display='block';
+  restartCoverFade();
+  const startButton=document.querySelector('.splash-btn');
+  if(startButton){
+    startButton.textContent=(totalSeen>0 || points>0) ? '继续核查 →' : '开始体验';
+  }
+  window.scrollTo({top:0,behavior:'auto'});
+}
+
+function restartCoverFade(){
+  const splash=document.getElementById('splash');
+  splash.style.animation='none';
+  void splash.offsetWidth;
+  splash.style.animation='';
+}
+
+function returnHome(){
+  history.replaceState({screen:'home'},'',location.pathname+location.search);
+  showHome();
+}
+
+function returnToCover(){
+  history.replaceState({screen:'home'},'',location.pathname+location.search);
+  showHome();
+}
+
+function returnToIntro(){
+  history.replaceState({screen:'intro'},'',location.pathname+location.search+'#intro');
+  showIntroPage();
+}
+
+function returnToMap(){
+  history.replaceState({screen:'map'},'',location.pathname+location.search+'#map');
+  showMapPage();
+}
+
+function scrollToGameTip(){
+  document.getElementById('game-footer-scene').scrollIntoView({
+    behavior:'smooth',
+    block:'center'
+  });
+}
+
+function updateScrollHint(){
+  const hint=document.getElementById('scroll-hint');
+  const game=document.getElementById('game');
+  const footer=document.getElementById('game-footer-scene');
+  if(!hint || !game || !footer) return;
+  const gameVisible=getComputedStyle(game).display!=='none';
+  const footerComfortablyVisible=footer.getBoundingClientRect().top<window.innerHeight*.68;
+  hint.classList.toggle('show',gameVisible && !footerComfortablyVisible);
+}
+
+function renderQ(){
+  const lv=LEVELS[curLevel];
+  document.getElementById('top-sub').textContent=lv.name+' · '+lv.level;
+  document.getElementById('level-tag').textContent=lv.level;
+  document.getElementById('points').textContent=points;
+  document.getElementById('total-seen').textContent=totalSeen;
+  requestAnimationFrame(updateScrollHint);
+
+  if(lv.isBoss){
+    renderBoss(lv);
+    return;
+  }
+
+  const q=lv.questions[curQ];
+  document.getElementById('q-num').textContent=curQ+1;
+  document.getElementById('q-total').textContent=lv.questions.length;
+  document.getElementById('prog-fill').style.width=(curQ/lv.questions.length*100)+'%';
+  document.getElementById('scene-strip').textContent=q.scene;
+  document.getElementById('p-avatar').src='./zhenshangdabai-assets/patients/'+
+    (PATIENT_IMAGE_BY_NAME[q.name] || 'patient_young_female.webp');
+  document.getElementById('p-avatar').alt=q.name;
+  document.getElementById('p-name').textContent=q.name;
+  document.getElementById('p-chief').textContent=q.chief;
+  document.getElementById('p-badge').className='p-badge badge-wait';
+  document.getElementById('p-badge').textContent='候诊中';
+  document.getElementById('bubble').textContent=q.bubble;
+  document.getElementById('q-label').style.display='block';
+  document.getElementById('choices').style.display='flex';
+  document.getElementById('boss-area').style.display='none';
+  document.getElementById('result-banner').className='result-banner';
+  document.getElementById('prescription').className='prescription';
+  document.getElementById('next-btn').className='next-btn';
+  document.getElementById('btn-t').className='cbtn';
+  document.getElementById('btn-f').className='cbtn';
+  document.getElementById('btn-t').disabled=false;
+  document.getElementById('btn-f').disabled=false;
+  document.getElementById('game-footer-scene').className='game-footer-scene';
+  const answerKey=curLevel+'-'+curQ;
+  if(Object.prototype.hasOwnProperty.call(answerRecords,answerKey)){
+    showAnswerResult(q,answerRecords[answerKey]);
+  }
+}
+
+function renderBoss(lv){
+  const bd=lv.bossData;
+  document.getElementById('q-num').textContent='Boss';
+  document.getElementById('q-total').textContent='关';
+  document.getElementById('prog-fill').style.width='90%';
+  document.getElementById('game').style.backgroundImage='linear-gradient(rgba(4,25,64,.42),rgba(4,25,64,.58)),url(\"./zhenshangdabai-assets/backgrounds/bg_boss.webp\")';
+  document.getElementById('scene-strip').textContent=bd.scene;
+  document.getElementById('p-avatar').src='./zhenshangdabai-assets/levels/chief.webp';
+  document.getElementById('p-avatar').alt=bd.name;
+  document.getElementById('p-name').textContent=bd.name;
+  document.getElementById('p-chief').textContent=bd.chief;
+  document.getElementById('p-badge').className='p-badge badge-wait';
+  document.getElementById('p-badge').textContent='核查任务';
+  document.getElementById('bubble').textContent='主任，请找出这篇文章中的2条健康谣言，帮助居民避免误信。';
+  document.getElementById('q-label').style.display='none';
+  document.getElementById('choices').style.display='none';
+  document.getElementById('boss-area').style.display='block';
+  document.getElementById('result-banner').className='result-banner';
+  document.getElementById('prescription').className='prescription';
+  document.getElementById('next-btn').className='next-btn';
+  document.getElementById('game-footer-scene').className='game-footer-scene hidden';
+  let html=`<div class="boss-article-title">${bd.title}</div>`;
+  bd.items.forEach(item=>{
+    html+=`<div class="boss-item" id="bi-${item.id}" onclick="toggleBoss(${item.id})"><div class="boss-num">${item.id}</div><div class="boss-item-text">${item.text}</div></div>`;
+  });
+  document.getElementById('boss-article').innerHTML=html;
+  if(bossResult){
+    bossSelected=[...bossResult.selected];
+    bossSubmitted=true;
+    showBossResult(bd,bossResult.correctCount);
+  }else{
+    bossSelected=[];
+    bossSubmitted=false;
+    document.getElementById('boss-submit').disabled=true;
+  }
+}
+
+function toggleBoss(id){
+  if(bossSubmitted) return;
+  const idx=bossSelected.indexOf(id);
+  if(idx>-1){
+    bossSelected.splice(idx,1);
+    document.getElementById('bi-'+id).classList.remove('selected-rumor');
+  } else {
+    if(bossSelected.length>=2) return;
+    bossSelected.push(id);
+    document.getElementById('bi-'+id).classList.add('selected-rumor');
+  }
+  document.getElementById('boss-submit').disabled=bossSelected.length!==2;
+}
+
+function submitBoss(){
+  if(bossSubmitted || bossResult) return;
+  bossSubmitted=true;
+  const bd=LEVELS[curLevel].bossData;
+  const bossCorrect=bossSelected.filter(id => bd.rumorIds.includes(id)).length;
+  bossResult={selected:[...bossSelected],correctCount:bossCorrect};
+  totalSeen+=2;
+  score+=bossCorrect;
+  points=Math.min(500,points+bossCorrect*50);
+  saveGameState();
+
+  document.getElementById('points').textContent=points;
+  document.getElementById('total-seen').textContent=totalSeen;
+  showBossResult(bd,bossCorrect);
+}
+
+function showBossResult(bd,bossCorrect){
+  document.getElementById('game-footer-scene').className='game-footer-scene hidden';
+  const correct=bossCorrect===2;
+  document.getElementById('boss-submit').disabled=true;
+  bd.items.forEach(item=>{
+    const el=document.getElementById('bi-'+item.id);
+    el.classList.remove('selected-rumor');
+    el.classList.add(item.isRumor ? 'confirmed-rumor' : 'confirmed-safe');
+  });
+
+  const banner=document.getElementById('result-banner');
+  if(correct){
+    banner.className='result-banner show rb-ok';
+    banner.textContent='✓ 完美！准确识别两条谣言，已帮助居民避免误信。';
+    document.getElementById('p-badge').className='p-badge badge-ok';
+    document.getElementById('p-badge').textContent='任务完成';
+  } else {
+    banner.className='result-banner show rb-bad';
+    banner.textContent=bossCorrect
+      ? `识别出1条谣言，获得50分；另1条仍需复核。`
+      : '识别有误，本次未得分。请查看下方正确答案。';
+    document.getElementById('p-badge').className='p-badge badge-bad';
+    document.getElementById('p-badge').textContent='需要复核';
+  }
+
+  const rumorExplanations = bd.items
+    .filter(item => item.isRumor)
+    .map(item => `【谣言${item.id}】${item.explain}`)
+    .join('\n\n');
+
+  document.getElementById('rx-body').textContent=rumorExplanations;
+  document.getElementById('rx-src').textContent='来源：丁香医生 / 科普中国 / 较真平台';
+  document.getElementById('prescription').className='prescription show';
+  document.getElementById('next-btn').className='next-btn show';
+  document.getElementById('next-btn').textContent='查看最终结果 →';
+}
+
+function answer(val){
+  const q=LEVELS[curLevel].questions[curQ];
+  const answerKey=curLevel+'-'+curQ;
+  if(Object.prototype.hasOwnProperty.call(answerRecords,answerKey)) return;
+  answerRecords[answerKey]=val;
+  const ok=val===q.answer;
+  totalSeen++;
+  if(ok){
+    score++;
+    points=Math.min(500,points+20);
+  }
+  saveGameState();
+
+  document.getElementById('points').textContent=points;
+  document.getElementById('total-seen').textContent=totalSeen;
+  showAnswerResult(q,val);
+}
+
+function showAnswerResult(q,val){
+  document.getElementById('game-footer-scene').className='game-footer-scene hidden';
+  const ok=val===q.answer;
+  document.getElementById('btn-t').className='cbtn'+(q.answer===true ? ' correct' : (val===true ? ' wrong' : ''));
+  document.getElementById('btn-f').className='cbtn'+(q.answer===false ? ' correct' : (val===false ? ' wrong' : ''));
+
+  document.getElementById('btn-t').disabled=true;
+  document.getElementById('btn-f').disabled=true;
+
+  const banner=document.getElementById('result-banner');
+  if(ok){
+    banner.className='result-banner show rb-ok';
+    banner.textContent='✓ 判断正确！获得20分，居民获得科学建议。';
+    document.getElementById('p-badge').className='p-badge badge-ok';
+    document.getElementById('p-badge').textContent='已核查';
+  } else {
+    banner.className='result-banner show rb-bad';
+    banner.textContent='✗ 判断有误，需重新评估。请查看科学解释。';
+    document.getElementById('p-badge').className='p-badge badge-bad';
+    document.getElementById('p-badge').textContent='需复核';
+  }
+
+  document.getElementById('rx-body').textContent=q.rx;
+  document.getElementById('rx-src').textContent=q.src;
+  document.getElementById('prescription').className='prescription show';
+
+  const nb=document.getElementById('next-btn');
+  nb.className='next-btn show';
+  nb.textContent=(curQ>=LEVELS[curLevel].questions.length-1) ? '查看本关结果 →' : '下一位居民 →';
+}
+
+function nextQ(){
+  const lv=LEVELS[curLevel];
+  if(lv.isBoss || curQ>=lv.questions.length-1){
+    showLevelResult();
+    return;
+  }
+  curQ++;
+  saveGameState();
+  renderQ();
+}
+
+function showLevelResult(){
+  document.getElementById('game').style.display='none';
+  document.getElementById('result').style.display='block';
+
+  points=Math.min(500,points);
+  const isFinal=curLevel>=LEVELS.length-1;
+  if(!isFinal){
+    unlockedLevel=Math.max(unlockedLevel,curLevel+2);
+    safeStorageSet('zhenshangdabai-unlocked',String(unlockedLevel));
+  }
+  saveGameState();
+  const rate=totalSeen>0 ? Math.round(score/totalSeen*100) : 0;
+  saveHistory(rate);
+  document.getElementById('res-score').textContent=points;
+  document.getElementById('res-rate').textContent=rate+'%';
+  document.getElementById('honor-result').className='honor-result';
+  const resultEmoji=document.getElementById('res-emoji');
+  resultEmoji.textContent='';
+  resultEmoji.style.backgroundImage=`url("./zhenshangdabai-assets/badges/${BADGE_IMAGES[Math.min(curLevel,BADGE_IMAGES.length-1)]}")`;
+
+  if(isFinal){
+    const honor=getHonor(rate);
+    document.getElementById('res-title').textContent='恭喜完成全部关卡！';
+    document.getElementById('res-sub').textContent=`你获得 ${points}/500 分，总正确率 ${rate}%。`;
+    document.getElementById('honor-result').className='honor-result show';
+    document.getElementById('honor-name').textContent=honor.icon+' '+honor.name;
+    document.getElementById('honor-grade').textContent=honor.grade;
+    document.getElementById('res-msg').textContent=honor.message;
+    document.getElementById('res-btn').textContent='再玩一次';
+    document.getElementById('res-btn').onclick=restartGame;
+    document.querySelector('.result-home-btn').textContent='返回首页';
+    document.querySelector('.result-home-btn').onclick=resetAndReturnHome;
+  } else {
+    const nextLv=LEVELS[curLevel+1];
+    document.getElementById('res-title').textContent=LEVELS[curLevel].name+'完成';
+    document.getElementById('res-sub').textContent='当前累计正确率 '+rate+'%。'+(rate>=60 ? '表现不错，可以进入下一关！' : '部分判断有偏差，继续加油。');
+    document.getElementById('res-msg').textContent='即将进入 '+nextLv.name+'——'+nextLv.level+' 阶段，难度升级，谣言更具迷惑性，请保持警觉。';
+    document.getElementById('res-btn').textContent='进入下一关 →';
+    document.getElementById('res-btn').onclick=goNextLevel;
+    document.querySelector('.result-home-btn').textContent='返回关卡地图';
+    document.querySelector('.result-home-btn').onclick=returnToMap;
+  }
+}
+
+function getHonor(rate){
+  if(rate>=95) return {
+    icon:'👑', name:'首席健康守护官', grade:'SSS级',
+    message:'顶尖表现！你能够敏锐识别健康信息中的风险点，并用科学依据守护自己和身边的人。'
+  };
+  if(rate>=80) return {
+    icon:'💎', name:'谣言粉碎机', grade:'SS级',
+    message:'优秀！你已具备较强的健康信息识别能力，可以帮助身边的人识别朋友圈和短视频里的健康谣言。'
+  };
+  if(rate>=60) return {
+    icon:'🛡️', name:'健康观察员', grade:'S级',
+    message:'不错！你已经掌握基础核查意识，继续关注信息来源和科学证据，会判断得更稳。'
+  };
+  return {
+    icon:'🌱', name:'谣言易感人群', grade:'A级',
+    message:'别灰心。面对健康信息时，记得核查来源、警惕绝对化表述，不要让网络传言替代专业建议。'
+  };
+}
+
+function goNextLevel(){
+  const nextLevel=curLevel+2;
+  if(nextLevel<=LEVELS.length){
+    enterLevel(nextLevel);
+  }else{
+    showMapPage();
+  }
+}
+
+function resetGameProgress(){
+  curLevel=0;
+  curQ=0;
+  score=0;
+  points=0;
+  totalSeen=0;
+  bossSelected=[];
+  bossSubmitted=false;
+  bossResult=null;
+  answerRecords={};
+  unlockedLevel=1;
+  safeStorageSet('zhenshangdabai-unlocked','1');
+  safeStorageRemove('zhenshangdabai-game-state');
+}
+
+function resetAndReturnHome(){
+  resetGameProgress();
+  returnHome();
+}
+
+function restartGame(){
+  resetGameProgress();
+  saveGameState();
+  document.getElementById('result').style.display='none';
+  document.getElementById('game').style.display='block';
+  document.getElementById('game').style.backgroundImage='';
+  renderQ();
+}
+
+loadGameState();
+
+if(location.hash==='#game'){
+  startGame();
+}else if(location.hash==='#role'){
+  loadUserProfile();
+  document.getElementById('splash').style.display='none';
+  document.getElementById('role-select').style.display='block';
+}else if(location.hash==='#intro'){
+  loadUserProfile();
+  const intro=document.getElementById('intro-page');
+  intro.className=userProfile.gender==='female' ? 'female' : 'male';
+  document.getElementById('splash').style.display='none';
+  intro.style.display='block';
+}else if(location.hash==='#map'){
+  showMapPage();
+}
+
+window.addEventListener('popstate',()=>{
+  if(location.hash==='#game'){
+    startGame();
+  }else if(location.hash==='#role'){
+    loadUserProfile();
+    document.getElementById('splash').style.display='none';
+    document.getElementById('game').style.display='none';
+    document.getElementById('result').style.display='none';
+    document.getElementById('intro-page').style.display='none';
+    document.getElementById('map-page').style.display='none';
+    document.getElementById('role-select').style.display='block';
+  }else if(location.hash==='#intro'){
+    loadUserProfile();
+    const intro=document.getElementById('intro-page');
+    intro.className=userProfile.gender==='female' ? 'female' : 'male';
+    document.getElementById('splash').style.display='none';
+    document.getElementById('role-select').style.display='none';
+    document.getElementById('game').style.display='none';
+    document.getElementById('result').style.display='none';
+    document.getElementById('map-page').style.display='none';
+    intro.style.display='block';
+  }else if(location.hash==='#map'){
+    showMapPage();
+  }else{
+    showHome();
+  }
+});
+window.addEventListener('scroll',updateScrollHint,{passive:true});
+window.addEventListener('resize',updateScrollHint);
+</script>
+</body>
+</html>
+
